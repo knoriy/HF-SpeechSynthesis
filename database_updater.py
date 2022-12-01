@@ -7,16 +7,17 @@ from itertools import repeat
 from utils import EnglishSpellingNormalizer, chunk
 
 class DatabaseUpdater:
-    def __init__(self, db_path:str=None) -> None:
+    def __init__(self, db_path:str=None, table_name:str="m_table") -> None:
+        self.table_name = table_name
         try:
             self.sqliteConnection = sqlite3.connect(db_path, timeout=100)
             self.cursor = self.sqliteConnection.cursor()
             print("Connected to SQLite")
-            self.create()
+            self.create(self.table_name)
         except sqlite3.Error as error:
             print("Failed to update sqlite table", error)
 
-    def create(self, name:str="wikipedia_en", title:str="id integer PRIMARY KEY, text str, complete bool", df:pd.DataFrame=None):
+    def create(self, name:str="m_table", title:str="id integer PRIMARY KEY, text str, complete bool", df:pd.DataFrame=None):
         try:
             if isinstance(df, pd.DataFrame):
                 df.to_sql(name, self.sqliteConnection, if_exists='replace', index = False)
@@ -33,7 +34,7 @@ class DatabaseUpdater:
         except sqlite3.Error as error:
             print("Failed to update sqlite table", error)
     
-    def insert(self, data:tuple, name:str="wikipedia_en", batch:bool=False):
+    def insert(self, data:tuple, name:str, batch:bool=False):
         cmd = f'''INSERT INTO {name} (text, complete) VALUES(?,?)'''
         try:
             if not batch:
@@ -44,7 +45,7 @@ class DatabaseUpdater:
         except sqlite3.Error as error:
             print("Failed to update sqlite table", error)
 
-    def insert_batch(self, data:tuple, name:str="wikipedia_en"):
+    def insert_batch(self, data:tuple, name:str):
         flattened_values = [x for tpl in data for x in tpl]
         cmd = f'''INSERT INTO {name} (text, complete) VALUES ''' + ', '.join(['(?, ?)' for _ in range(len(flattened_values)//2)])
         self._insert(cmd, flattened_values)
@@ -55,7 +56,7 @@ class DatabaseUpdater:
             self.cursor.close()
             print("The SQLite connection is closed")
     
-    def set_complete(self, id:int, name:str='wikipedia_en', ):
+    def set_complete(self, id:int, name:str):
         try:
             sql_update_query = f"""Update {name} set complete = True where id = {id}"""
             self.cursor.execute(sql_update_query)
@@ -64,7 +65,7 @@ class DatabaseUpdater:
         except sqlite3.Error as error:
             print("Failed to update sqlite table", error)
     
-    def get_iteratior(self, name:str='wikipedia_en'):
+    def get_iteratior(self, name:str='m_table'):
         return self.cursor.execute(f'SELECT * FROM {name} WHERE complete = 0')
 
 def main(db_path, data):
@@ -76,10 +77,12 @@ def main(db_path, data):
             text = ' '.join(j.splitlines())
             text = text.split('. ')
             batch.extend([(t.strip(), False) for t in text])
+
+    table_name = "en"
     
-    db = DatabaseUpdater(db_path)
+    db = DatabaseUpdater(db_path, table_name)
     for chunked_batch in chunk(batch, 100):
-        db.insert(chunked_batch, batch=True)
+        db.insert(chunked_batch, name=table_name,  batch=True)
 
 def split_all_audio_files(db_path, data, chunksize):
     print(f'starting pool')
@@ -94,7 +97,7 @@ if __name__ == '__main__':
     wikipedia_dataset = load_dataset("wikipedia", "20220301.en", split='train')
     print("wikipedia dataset loaded")
     print(f"cpu cores found: {multiprocessing.cpu_count()}")
-    split_all_audio_files('wikipedia.db', wikipedia_dataset, chunksize=1024)
+    split_all_audio_files('test.db', wikipedia_dataset, chunksize=1024)
 
 
     
