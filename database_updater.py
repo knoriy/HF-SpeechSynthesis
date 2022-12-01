@@ -68,8 +68,8 @@ class DatabaseUpdater:
     def get_iteratior(self, name:str='m_table'):
         return self.cursor.execute(f'SELECT * FROM {name} WHERE complete = 0')
 
-def main(db_path, data):
-    eng_nomaliser = EnglishSpellingNormalizer('/fsx/knoriy/code/text-to-speech/data/english.json')
+def main(db_path, data, table_name):
+    eng_nomaliser = EnglishSpellingNormalizer('./data/english.json')
     batch = []
     for i in data:
         split_text = eng_nomaliser(i['text']).strip().split('. ')
@@ -77,18 +77,16 @@ def main(db_path, data):
             text = ' '.join(j.splitlines())
             text = text.split('. ')
             batch.extend([(t.strip(), False) for t in text])
-
-    table_name = "en"
     
     db = DatabaseUpdater(db_path, table_name)
     for chunked_batch in chunk(batch, 100):
         db.insert(chunked_batch, name=table_name,  batch=True)
 
-def split_all_audio_files(db_path, data, chunksize):
+def split_all_audio_files(db_path, data, table_name, chunksize):
     print(f'starting pool')
     with tqdm.tqdm(total=int(len(data)/chunksize)) as pbar:
         with Pool() as pool:
-            for result in pool.starmap(main, zip(repeat(db_path), chunk(data, chunksize))):
+            for result in pool.starmap(main, zip(repeat(db_path), chunk(data, chunksize), repeat(table_name))):
                 pbar.update(1)
 
 
@@ -97,7 +95,7 @@ if __name__ == '__main__':
     wikipedia_dataset = load_dataset("wikipedia", "20220301.en", split='train')
     print("wikipedia dataset loaded")
     print(f"cpu cores found: {multiprocessing.cpu_count()}")
-    split_all_audio_files('test.db', wikipedia_dataset, chunksize=1024)
+    split_all_audio_files('wikipeadia.db', wikipedia_dataset, table_name="en", chunksize=1024)
 
 
     
