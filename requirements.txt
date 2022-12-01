@@ -1,0 +1,7 @@
+fairseq
+scipy
+huggingface_hub
+g2p_en
+datasets
+apache_beam
+phonemizer
