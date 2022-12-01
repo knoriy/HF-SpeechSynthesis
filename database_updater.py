@@ -94,7 +94,7 @@ if __name__ == '__main__':
     wikipedia_dataset = load_dataset("wikipedia", "20220301.en", split='train')
     print("wikipedia dataset loaded")
     print(f"cpu cores found: {multiprocessing.cpu_count()}")
-    split_all_audio_files('wikipedia_en.db', wikipedia_dataset, chunksize=1024)
+    split_all_audio_files('wikipedia.db', wikipedia_dataset, chunksize=1024)
 
 
     
