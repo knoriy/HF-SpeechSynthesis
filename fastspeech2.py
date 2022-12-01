@@ -59,7 +59,6 @@ if __name__ == '__main__':
     parser.add_argument('-s', '--save_path', default='samples/')
     args = parser.parse_args()
 
-    db = DatabaseUpdater('wikipedia_en.db')
 
     model_name_list = [
             "facebook/fastspeech2-en-200_speaker-cv4",
@@ -77,6 +76,7 @@ if __name__ == '__main__':
             ]
 
     model = Synthosiser(model_name_list[0])
+    db = DatabaseUpdater('wikipedia_en.db', table_name='en')
     for i, row in enumerate(db.get_iteratior()):
         print(row)
         if row[2] == True:

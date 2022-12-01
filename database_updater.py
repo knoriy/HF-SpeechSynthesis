@@ -7,7 +7,7 @@ from itertools import repeat
 from utils import EnglishSpellingNormalizer, chunk
 
 class DatabaseUpdater:
-    def __init__(self, db_path:str=None, table_name:str="m_table") -> None:
+    def __init__(self, db_path:str, table_name:str) -> None:
         self.table_name = table_name
         try:
             self.sqliteConnection = sqlite3.connect(db_path, timeout=100)
