@@ -10,7 +10,7 @@ class DatabaseUpdater:
     def __init__(self, db_path:str, table_name:str) -> None:
         self.table_name = table_name
         try:
-            self.sqliteConnection = sqlite3.connect(db_path, timeout=100)
+            self.sqliteConnection = sqlite3.connect(db_path, timeout=100, isolation_level="IMMEDIATE")
             self.cursor = self.sqliteConnection.cursor()
             print("Connected to SQLite")
             self.create(self.table_name)
@@ -33,7 +33,7 @@ class DatabaseUpdater:
             self.sqliteConnection.commit()
         except sqlite3.Error as error:
             print("Failed to update sqlite table", error)
-    
+
     def insert(self, data:tuple, name:str, batch:bool=False):
         cmd = f'''INSERT INTO {name} (text, complete) VALUES(?,?)'''
         try:
@@ -55,16 +55,16 @@ class DatabaseUpdater:
             self.sqliteConnection.close()
             self.cursor.close()
             print("The SQLite connection is closed")
-    
+
     def set_complete(self, id:int, name:str):
         try:
             sql_update_query = f"""Update {name} set complete = True where id = {id}"""
-            self.cursor.execute(sql_update_query)
+            self.sqliteConnection.execute(sql_update_query)
             self.sqliteConnection.commit()
-            print("Record Updated successfully ")
+            # print("Record Updated successfully ")
         except sqlite3.Error as error:
             print("Failed to update sqlite table", error)
-    
+
     def get_iteratior(self, name:str):
         return self.cursor.execute(f'SELECT * FROM {name} WHERE complete = 0')
 
