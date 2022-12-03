@@ -130,6 +130,7 @@ dmypy.json
 
 *.out
 *.db
+*.gz
 
 test.ipynb
 samples
