@@ -22,4 +22,4 @@ export NCCL_TREE_THRESHOLD=0
 
 echo Running job on $SLURM_JOB_NUM_NODES nodes
 
-srun --comment clap /fsx/home-knoriy/miniconda3/envs/tts/bin/python /fsx/knoriy/code/text-to-speech/database_updater.py
+srun --comment clap /fsx/home-knoriy/miniconda3/envs/tts/bin/python /fsx/knoriy/code/HF-SpeechSynthesis/database_updater.py

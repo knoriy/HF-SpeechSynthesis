@@ -1,6 +1,7 @@
 import torch
 import json
 import pathlib
+import tqdm
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
@@ -23,7 +24,7 @@ class Synthosiser():
         TTSHubInterface.update_cfg_with_data_cfg(self.cfg, self.task.data_cfg)
         self.generator = self.task.build_generator(self.models, self.cfg)
 
-        self.english_spelling_normalizer = EnglishSpellingNormalizer('/fsx/knoriy/code/text-to-speech/data/english.json')
+        self.english_spelling_normalizer = EnglishSpellingNormalizer('./data/english.json')
 
     def get_audio(self, text):
         sample = TTSHubInterface.get_model_input(self.task, text)
@@ -40,7 +41,6 @@ class Synthosiser():
         sf.write(save_dir, wav.detach().cpu().numpy(), rate)
         with open(save_dir.with_suffix('.json'), 'w') as f:
             json.dump({'filename': save_dir.name, 'text':[text], 'original_data':{'raw_text':text}}, f)
-
     
     def __call__(self, text, dest):
         dest = pathlib.Path(dest)
@@ -59,6 +59,8 @@ if __name__ == '__main__':
     parser.add_argument('-s', '--save_path', default='samples/')
     args = parser.parse_args()
 
+    db_dir = 'wikipedia.db'
+    table_name = 'en'
 
     model_name_list = [
             "facebook/fastspeech2-en-200_speaker-cv4",
@@ -76,15 +78,14 @@ if __name__ == '__main__':
             ]
 
     model = Synthosiser(model_name_list[0])
-    db = DatabaseUpdater('wikipedia_en.db', table_name='en')
-    for i, row in enumerate(db.get_iteratior()):
-        print(row)
+    db = DatabaseUpdater(db_dir, table_name=table_name)
+    print("db loaded")
+    for row in tqdm.tqdm(db.get_iteratior("en")):
+        # print(row)
         if row[2] == True:
             continue
-        save_path = pathlib.Path(args.save_path).joinpath(str(row[0])+".flac")
+        save_path = pathlib.Path(args.save_path)/(str(row[0])+".flac")
         if model(row[1], save_path):
-            db.set_complete(row[2])
-            with open(save_path.replace('.flac', '.json'), 'w') as f:
+            db.set_complete(row[0], table_name)
+            with open(save_path.with_suffix('.json'), 'w') as f:
                 json.dump({'filename': save_path.name, 'text':[row[1]], 'original_data':{"language":"en"}}, f)
-
-        break

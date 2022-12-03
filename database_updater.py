@@ -65,7 +65,7 @@ class DatabaseUpdater:
         except sqlite3.Error as error:
             print("Failed to update sqlite table", error)
     
-    def get_iteratior(self, name:str='m_table'):
+    def get_iteratior(self, name:str):
         return self.cursor.execute(f'SELECT * FROM {name} WHERE complete = 0')
 
 def main(db_path, data, table_name):
@@ -95,7 +95,7 @@ if __name__ == '__main__':
     wikipedia_dataset = load_dataset("wikipedia", "20220301.en", split='train')
     print("wikipedia dataset loaded")
     print(f"cpu cores found: {multiprocessing.cpu_count()}")
-    split_all_audio_files('wikipeadia.db', wikipedia_dataset, table_name="en", chunksize=1024)
+    split_all_audio_files('wikipedia.db', wikipedia_dataset, table_name="en", chunksize=1024)
 
 
     
