@@ -9,7 +9,7 @@ from fairseq.checkpoint_utils import load_model_ensemble_and_task_from_hf_hub
 from fairseq.models.text_to_speech.hub_interface import TTSHubInterface
 import soundfile as sf
 
-from utils import EnglishSpellingNormalizer
+from utils import EnglishSpellingNormalizer, tardir
 from database_updater import DatabaseUpdater
 
 class Synthosiser():
@@ -82,7 +82,7 @@ if __name__ == '__main__':
     for row in tqdm.tqdm(db.get_iteratior("en")):
         if row[2] == True: continue
 
-        save_path = pathlib.Path(args.save_path)/(str(row[0])+".flac")
+        save_path = pathlib.Path(args.save_path).joinpath(table_name,(str(row[0])+".flac"))
         if model(row[1], save_path):
             with open(save_path.with_suffix('.json'), 'w') as f:
                 json.dump({
@@ -93,3 +93,11 @@ if __name__ == '__main__':
                         "model":model_name_list[table_name]}
                     }, f)
             db.set_complete(row[0], table_name)
+
+        if row[0] % 512*2 == 0:
+            tardir("/fsx/knoriy/code/HF-SpeechSynthesis/samples/en", 
+                f"./samples/{table_name}_tars/", 
+                512,
+                shuffle=False, 
+                start_idx=row[0], 
+                delete_file=False)

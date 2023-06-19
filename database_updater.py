@@ -69,10 +69,11 @@ class DatabaseUpdater:
         return self.cursor.execute(f'SELECT * FROM {name} WHERE complete = 0')
 
 def main(db_path, data, table_name):
-    eng_nomaliser = EnglishSpellingNormalizer('./data/english.json')
+    # eng_nomaliser = EnglishSpellingNormalizer('./data/english.json')
     batch = []
     for i in data:
-        split_text = eng_nomaliser(i['text']).strip().split('. ')
+        # split_text = eng_nomaliser(i['text']).strip().split('. ')
+        split_text = i['text'].strip().split('. ')
         for j in split_text:
             text = ' '.join(j.splitlines())
             text = text.split('. ')
@@ -92,10 +93,10 @@ def split_all_audio_files(db_path, data, table_name, chunksize):
 
 if __name__ == '__main__':
     from datasets import load_dataset
-    wikipedia_dataset = load_dataset("wikipedia", "20220301.en", split='train')
-    print("wikipedia dataset loaded")
-    print(f"cpu cores found: {multiprocessing.cpu_count()}")
-    split_all_audio_files('wikipedia.db', wikipedia_dataset, table_name="en", chunksize=1024)
+    langs = ["en", "fr", "tr", "ar", "es", "ru", "zh", "vi"]
 
-
-    
+    for lang in langs[2:]:
+        wikipedia_dataset = load_dataset("wikipedia", f"20220301.{lang}", split='train')
+        print("wikipedia dataset loaded")
+        print(f"cpu cores found: {multiprocessing.cpu_count()}")
+        split_all_audio_files('wikipedia.db', wikipedia_dataset, table_name=lang, chunksize=1024)
